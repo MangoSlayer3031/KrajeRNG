@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kraje RNG</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#1e1e1e;
+    color:white;
+    text-align:center;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+button{
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:18px;
+    margin:5px;
+}
+
+#result{
+    margin-top:30px;
+}
+
+#result img{
+    width:250px;
+    border-radius:10px;
+    border:2px solid white;
+}
+
+.rarity{
+    color:gold;
+    font-size:20px;
+}
+
+#gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+    gap:15px;
+    margin-top:20px;
+}
+
+.card{
+    background:#2c2c2c;
+    border-radius:10px;
+    padding:10px;
+}
+
+.card img{
+    width:100%;
+    height:80px;
+    object-fit:cover;
+    border-radius:5px;
+}
+
+.locked{
+    background:#555;
+    color:#999;
+}
+
+.placeholder{
+    width:100%;
+    height:80px;
+    background:#444;
+    border-radius:5px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Kraje RNG</h1>
+
+<button onclick="rollCountry()">
+🎲 Losuj Państwo
+</button>
+
+<button onclick="resetCollection()">
+🗑 Reset Kolekcji
+</button>
+
+<div id="result">
+<h2>Kliknij przycisk aby losować</h2>
+</div>
+
+<hr>
+
+<h2>Kolekcja</h2>
+
+<p id="counter"></p>
+
+<div id="gallery"></div>
+
+</div>
+
+<script>
+
+const countries = [
+
+{
+name:"United Kingdom",
+flag:"https://flagcdn.com/w320/gb.png",
+chance:1000,
+rarity:"1/10"
+},
+
+{
+name:"Poland",
+flag:"https://flagcdn.com/w320/pl.png",
+chance:900,
+rarity:"1/15"
+},
+
+{
+name:"Germany",
+flag:"https://flagcdn.com/w320/de.png",
+chance:850,
+rarity:"1/20"
+},
+
+{
+name:"Iceland",
+flag:"https://flagcdn.com/w320/is.png",
+chance:150,
+rarity:"1/100"
+},
+
+{
+name:"Bhutan",
+flag:"https://flagcdn.com/w320/bt.png",
+chance:40,
+rarity:"1/300"
+},
+
+{
+name:"Chad",
+flag:"https://flagcdn.com/w320/td.png",
+chance:10,
+rarity:"1/1000"
+},
+
+{
+name:"Tuvalu",
+flag:"https://flagcdn.com/w320/tv.png",
+chance:3,
+rarity:"1/5000"
+},
+
+{
+name:"Nauru",
+flag:"https://flagcdn.com/w320/nr.png",
+chance:1,
+rarity:"1/10000"
+}
+
+];
+
+let unlocked =
+JSON.parse(
+localStorage.getItem("unlockedCountries")
+) || [];
+
+function saveData(){
+
+localStorage.setItem(
+"unlockedCountries",
+JSON.stringify(unlocked)
+);
+
+}
+
+function updateGallery(){
+
+let html = "";
+
+countries.forEach(country=>{
+
+const isUnlocked =
+unlocked.includes(country.name);
+
+if(isUnlocked){
+
+html += `
+<div class="card">
+<img src="${country.flag}">
+<h4>${country.name}</h4>
+<p>${country.rarity}</p>
+</div>
+`;
+
+}else{
+
+html += `
+<div class="card locked">
+<div class="placeholder"></div>
+<h4>???</h4>
+<p>Nieodkryte</p>
+</div>
+`;
+
+}
+
+});
+
+document.getElementById("gallery").innerHTML =
+html;
+
+document.getElementById("counter").innerText =
+`Odblokowano ${unlocked.length}/${countries.length}`;
+
+}
+
+function rollCountry(){
+
+const totalWeight =
+countries.reduce(
+(sum,country)=>sum+country.chance,
+0
+);
+
+let random =
+Math.random()*totalWeight;
+
+for(const country of countries){
+
+random -= country.chance;
+
+if(random <= 0){
+
+if(
+!unlocked.includes(country.name)
+){
+
+unlocked.push(country.name);
+
+saveData();
+
+}
+
+document.getElementById("result")
+.innerHTML = `
+<h2>${country.name}</h2>
+
+<img src="${country.flag}">
+
+<p class="rarity">
+⭐ Rzadkość: ${country.rarity}
+</p>
+`;
+
+updateGallery();
+
+return;
+
+}
+
+}
+
+}
+
+function resetCollection(){
+
+if(
+confirm(
+"Czy na pewno usunąć kolekcję?"
+)
+){
+
+unlocked = [];
+
+localStorage.removeItem(
+"unlockedCountries"
+);
+
+updateGallery();
+
+document.getElementById("result")
+.innerHTML =
+"<h2>Kolekcja wyczyszczona</h2>";
+
+}
+
+}
+
+updateGallery();
+
+</script>
+
+</body>
+</html>
